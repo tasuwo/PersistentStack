@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tasuwo/swift",
       "state" : {
-        "revision" : "4cfd27dd84717184e1ede52610bd9b2132a643fd",
-        "version" : "0.2.0"
+        "revision" : "2aebca0c6a4988c416d5348805ed45f3dfc0d66e",
+        "version" : "0.3.0"
       }
     },
     {
