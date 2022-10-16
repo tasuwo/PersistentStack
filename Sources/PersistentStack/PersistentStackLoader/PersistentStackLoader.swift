@@ -8,14 +8,7 @@ import Combine
 import Foundation
 
 public class PersistentStackLoader {
-    public enum Event {
-        case forceDisabled(CKAccountStatus?)
-    }
-
     // MARK: - Properties
-
-    public var events: AnyPublisher<Event, Never> { _events.eraseToAnyPublisher() }
-    public var _events: PassthroughSubject<Event, Never> = .init()
 
     private let persistentStack: PersistentStack
     private let syncSettingStorage: CloudKitSyncSettingStorable
@@ -49,7 +42,6 @@ public class PersistentStackLoader {
 
                 default:
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
-                    _events.send(.forceDisabled(status))
                 }
             }
         }
