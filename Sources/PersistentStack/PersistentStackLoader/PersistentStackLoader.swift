@@ -3,12 +3,13 @@
 //
 
 import AsyncAlgorithms
+import CloudKit
 import Combine
 import Foundation
 
 public class PersistentStackLoader {
     public enum Event {
-        case forceDisabled(CloudKitAvailability.UnavailableReason)
+        case forceDisabled(CKAccountStatus?)
     }
 
     // MARK: - Properties
@@ -32,19 +33,19 @@ public class PersistentStackLoader {
 
     public func run() -> Task<Void, Never> {
         return Task {
-            for await (isEnabled, availability) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CloudKitAvailabilityObserver.stream) {
+            for await (isEnabled, status) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CKAccountStatus.ps.stream) {
                 guard !isEnabled else {
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
                     continue
                 }
 
-                switch availability {
+                switch status {
                 case .available:
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: true)
 
-                case let .unavailable(reason):
+                default:
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
-                    _events.send(.forceDisabled(reason))
+                    _events.send(.forceDisabled(status))
                 }
             }
         }
