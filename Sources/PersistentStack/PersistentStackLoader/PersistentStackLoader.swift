@@ -34,7 +34,7 @@ public class PersistentStackLoader {
     public func run() -> Task<Void, Never> {
         return Task {
             for await (isEnabled, status) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CKAccountStatus.ps.stream) {
-                guard !isEnabled else {
+                guard isEnabled else {
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
                     continue
                 }
