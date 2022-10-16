@@ -17,6 +17,15 @@
         "revision" : "9f39744e025c7d377987f30b03770805dcb0bcd1",
         "version" : "1.1.4"
       }
+    },
+    {
+      "identity" : "swift-async-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-async-algorithms",
+      "state" : {
+        "revision" : "cca423ff03ab657062f3781847e65a867b51bb01",
+        "version" : "0.0.3"
+      }
     }
   ],
   "version" : 2

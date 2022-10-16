@@ -54,7 +54,7 @@ public class PersistentStack {
         }
     }
 
-    public func reconfigure(isCloudKitEnabled: Bool) {
+    public func reconfigureIfNeeded(isCloudKitEnabled: Bool) {
         guard self.isCloudKitEnabled != isCloudKitEnabled else { return }
         historyTracker.dispatchContainerReload { [weak self] in
             guard let self else { return }
@@ -102,7 +102,9 @@ public class PersistentStack {
         }
 
         #if os(iOS)
-        description.url = persistentContainerUrl
+        if let persistentContainerUrl {
+            description.url = persistentContainerUrl
+        }
         #endif
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
