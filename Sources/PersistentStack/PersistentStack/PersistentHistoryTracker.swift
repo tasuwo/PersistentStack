@@ -93,23 +93,21 @@ class PersistentHistoryTracker {
         historyQueue.addOperation { [weak self, weak persistentContainer] in
             guard let self, let persistentContainer else { return }
 
-            var transactions: [NSPersistentHistoryTransaction]?
-            defer {
-                if let transactions { self.lastHistoryToken = transactions.last?.token }
-            }
-
             let context = persistentContainer.newBackgroundContext()
             context.performAndWait {
-                transactions = try? PersistentHistoryFetcher
-                    .fetchRemoteTransactions(after: self.lastHistoryToken, for: context)
-            }
+                guard let transactions = try? PersistentHistoryFetcher.fetchRemoteTransactions(after: self.lastHistoryToken, for: context),
+                      transactions.isEmpty
+                else {
+                    return
+                }
 
-            guard let transactions else { return }
+                self.onMergeRemoteChanges?(persistentContainer, transactions)
 
-            self.onMergeRemoteChanges?(persistentContainer, transactions)
+                persistentContainer.viewContext.perform {
+                    transactions.merge(into: persistentContainer.viewContext)
+                }
 
-            persistentContainer.viewContext.perform {
-                transactions.merge(into: persistentContainer.viewContext)
+                self.lastHistoryToken = transactions.last?.token
             }
         }
     }
