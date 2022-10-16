@@ -22,8 +22,8 @@ public class PersistentStackLoader {
 
     // MARK: - Initializers
 
-    init(persistentStack: PersistentStack,
-         syncSettingStorage: CloudKitSyncSettingStorable)
+    public init(persistentStack: PersistentStack,
+                syncSettingStorage: CloudKitSyncSettingStorable)
     {
         self.persistentStack = persistentStack
         self.syncSettingStorage = syncSettingStorage
