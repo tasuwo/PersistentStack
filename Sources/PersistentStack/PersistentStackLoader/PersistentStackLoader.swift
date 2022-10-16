@@ -30,20 +30,22 @@ public class PersistentStackLoader {
 
     // MARK: - Methods
 
-    public func run() async throws {
-        for try await (isEnabled, availability) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CloudKitAvailabilityObserver.stream) {
-            guard !isEnabled else {
-                persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
-                continue
-            }
+    public func run() -> Task<Void, Never> {
+        return Task {
+            for await (isEnabled, availability) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CloudKitAvailabilityObserver.stream) {
+                guard !isEnabled else {
+                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
+                    continue
+                }
 
-            switch availability {
-            case .available:
-                persistentStack.reconfigureIfNeeded(isCloudKitEnabled: true)
+                switch availability {
+                case .available:
+                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: true)
 
-            case let .unavailable(reason):
-                persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
-                _events.send(.forceDisabled(reason))
+                case let .unavailable(reason):
+                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
+                    _events.send(.forceDisabled(reason))
+                }
             }
         }
     }

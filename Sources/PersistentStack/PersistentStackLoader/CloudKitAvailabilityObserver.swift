@@ -5,8 +5,8 @@
 import CloudKit
 
 enum CloudKitAvailabilityObserver {
-    static var stream: AsyncThrowingStream<CloudKitAvailability, Error> {
-        AsyncThrowingStream { continuation in
+    static var stream: AsyncStream<CloudKitAvailability> {
+        AsyncStream { continuation in
             let iteration = Task {
                 for try await status in Self.accountStatus {
                     switch status {
@@ -25,6 +25,9 @@ enum CloudKitAvailabilityObserver {
                     case .temporarilyUnavailable:
                         continuation.yield(.unavailable(.temporarilyUnavailable))
 
+                    case .none:
+                        continuation.yield(.unavailable(.unknown))
+
                     @unknown default:
                         continuation.yield(.unavailable(.unknown))
                     }
@@ -37,12 +40,12 @@ enum CloudKitAvailabilityObserver {
         }
     }
 
-    private static var accountStatus: AsyncThrowingStream<CKAccountStatus, Error> {
-        AsyncThrowingStream(CKAccountStatus.self) { continuation in
+    private static var accountStatus: AsyncStream<CKAccountStatus?> {
+        AsyncStream { continuation in
             if #available(iOS 15, *) {
                 let iteration = Task {
                     for await _ in NotificationCenter.default.notifications(named: .CKAccountChanged) {
-                        let status = try await CKContainer.default().accountStatus()
+                        let status = try? await CKContainer.default().accountStatus()
                         continuation.yield(status)
                     }
                 }
