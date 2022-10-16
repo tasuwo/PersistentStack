@@ -39,7 +39,7 @@ public class PersistentStack {
                                                       isCloudKitEnabled: isCloudKitEnabled)
 
         historyTracker.observe(self)
-        loadContainer()
+        Self.loadContainer(self.persistentContainer, with: configuration)
     }
 
     // MARK: - Methods
@@ -73,7 +73,7 @@ public class PersistentStack {
                 try? self.persistentContainer.persistentStoreCoordinator.remove($0)
             }
 
-            self.loadContainer()
+            Self.loadContainer(container, with: self.configuration)
 
             self.persistentContainer = container
             self.isCloudKitEnabled = isCloudKitEnabled
@@ -81,14 +81,14 @@ public class PersistentStack {
         }
     }
 
-    private func loadContainer() {
-        persistentContainer.loadPersistentStores { storeDescription, error in
+    private static func loadContainer(_ container: NSPersistentContainer, with configuration: Configuration) {
+        container.loadPersistentStores { storeDescription, error in
             guard let error = error as NSError? else { return }
             assertionFailure("Persistent store '\(storeDescription)' failed loading: \(String(describing: error))")
         }
-        persistentContainer.viewContext.mergePolicy = configuration.mergePoicy
-        persistentContainer.viewContext.transactionAuthor = configuration.author
-        persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = configuration.mergePoicy
+        container.viewContext.transactionAuthor = configuration.author
+        container.viewContext.automaticallyMergesChangesFromParent = true
     }
 
     private static func makeContainer(managedObjectModelUrl: URL,
