@@ -8,12 +8,6 @@ import CoreData
 class PersistentHistoryTracker {
     // MARK: - Properties
 
-    static let defaultMergeHandler: PersistentStack.RemoteChangeMergeHandler = { persistentContainer, transactions in
-        persistentContainer.viewContext.perform {
-            transactions.merge(into: persistentContainer.viewContext)
-        }
-    }
-
     private var lastHistoryToken: NSPersistentHistoryToken? {
         didSet {
             guard let token = lastHistoryToken,
@@ -48,8 +42,8 @@ class PersistentHistoryTracker {
     private let notificationCenter: NotificationCenter
     private let persistentHistoryTokenSaveDirectory: URL
     private let persistentHistoryTokenFileName: String
-    private let onMergeRemoteChanges: PersistentStack.RemoteChangeMergeHandler
 
+    private var onMergeRemoteChanges: PersistentStack.RemoteChangeMergeHandler?
     private var persistentContainerObservationCancellable: AnyCancellable?
     private var remoteChangeObservationCancellable: AnyCancellable?
 
@@ -58,13 +52,11 @@ class PersistentHistoryTracker {
     init(author: String,
          persistentHistoryTokenSaveDirectory: URL,
          persistentHistoryTokenFileName: String,
-         onMergeRemoteChanges: @escaping PersistentStack.RemoteChangeMergeHandler,
          notificationCenter: NotificationCenter = .default)
     {
         self.author = author
         self.persistentHistoryTokenSaveDirectory = persistentHistoryTokenSaveDirectory
         self.persistentHistoryTokenFileName = persistentHistoryTokenFileName
-        self.onMergeRemoteChanges = onMergeRemoteChanges
         self.notificationCenter = notificationCenter
 
         if let tokenData = try? Data(contentsOf: tokenFile) {
@@ -91,6 +83,12 @@ class PersistentHistoryTracker {
         historyQueue.addOperation { block() }
     }
 
+    func registerRemoteChangeMergeHandler(_ handler: @escaping PersistentStack.RemoteChangeMergeHandler) {
+        historyQueue.addOperation { [weak self] in
+            self?.onMergeRemoteChanges = handler
+        }
+    }
+
     private func mergeRemoteChanges(to persistentContainer: NSPersistentContainer) {
         historyQueue.addOperation { [weak self, weak persistentContainer] in
             guard let self, let persistentContainer else { return }
@@ -107,7 +105,12 @@ class PersistentHistoryTracker {
             }
 
             guard let transactions else { return }
-            self.onMergeRemoteChanges(persistentContainer, transactions)
+
+            self.onMergeRemoteChanges?(persistentContainer, transactions)
+
+            persistentContainer.viewContext.perform {
+                transactions.merge(into: persistentContainer.viewContext)
+            }
         }
     }
 }

@@ -43,6 +43,10 @@ public class PersistentStackLoader {
                 case .available:
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: true)
 
+                case .none:
+                    // NOP
+                    break
+
                 default:
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
                     _events.send(.forceDisabled(status))

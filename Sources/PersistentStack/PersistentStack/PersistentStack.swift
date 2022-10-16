@@ -27,12 +27,11 @@ public class PersistentStack {
 
     // MARK: - Initializers
 
-    public init(configuration: Configuration, isCloudKitEnabled: Bool, mergeHandler: RemoteChangeMergeHandler?) {
+    public init(configuration: Configuration, isCloudKitEnabled: Bool) {
         self.configuration = configuration
         self.historyTracker = PersistentHistoryTracker(author: configuration.author,
                                                        persistentHistoryTokenSaveDirectory: configuration.persistentHistoryTokenSaveDirectory,
-                                                       persistentHistoryTokenFileName: configuration.persistentHistoryTokenFileName,
-                                                       onMergeRemoteChanges: mergeHandler ?? PersistentHistoryTracker.defaultMergeHandler)
+                                                       persistentHistoryTokenFileName: configuration.persistentHistoryTokenFileName)
         self.isCloudKitEnabled = isCloudKitEnabled
         self.persistentContainer = Self.makeContainer(managedObjectModelUrl: configuration.managedObjectModelUrl,
                                                       persistentContainerName: configuration.persistentContainerName,
@@ -52,6 +51,10 @@ public class PersistentStack {
             context.transactionAuthor = configuration.author
             return context
         }
+    }
+
+    public func registerRemoteChangeMergeHandler(_ handler: @escaping RemoteChangeMergeHandler) {
+        historyTracker.registerRemoteChangeMergeHandler(handler)
     }
 
     public func reconfigureIfNeeded(isCloudKitEnabled: Bool) {
