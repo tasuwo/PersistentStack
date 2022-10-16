@@ -87,6 +87,7 @@ public class PersistentStack {
             assertionFailure("Persistent store '\(storeDescription)' failed loading: \(String(describing: error))")
         }
         persistentContainer.viewContext.mergePolicy = configuration.mergePoicy
+        persistentContainer.viewContext.transactionAuthor = configuration.author
         persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
     }
 
