@@ -96,7 +96,7 @@ class PersistentHistoryTracker {
             let context = persistentContainer.newBackgroundContext()
             context.performAndWait {
                 guard let transactions = try? PersistentHistoryFetcher.fetchRemoteTransactions(after: self.lastHistoryToken, for: context),
-                      transactions.isEmpty
+                      !transactions.isEmpty
                 else {
                     return
                 }
