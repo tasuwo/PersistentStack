@@ -14,6 +14,7 @@ public class PersistentStack {
         return persistentContainer.viewContext
     }
 
+    public var isLoaded: Bool { persistentContainer.isLoaded }
     @Published
     public private(set) var isCloudKitEnabled: Bool
     @Published
@@ -39,7 +40,6 @@ public class PersistentStack {
                                                       isCloudKitEnabled: isCloudKitEnabled)
 
         historyTracker.observe(self)
-        Self.loadContainer(self.persistentContainer, with: configuration)
     }
 
     // MARK: - Methods
@@ -58,14 +58,17 @@ public class PersistentStack {
     }
 
     public func reconfigureIfNeeded(isCloudKitEnabled: Bool) {
-        guard self.isCloudKitEnabled != isCloudKitEnabled else { return }
+        guard self.isCloudKitEnabled != isCloudKitEnabled || !self.persistentContainer.isLoaded else { return }
         historyTracker.dispatchContainerReload { [weak self] in
             guard let self else { return }
 
-            let container = Self.makeContainer(managedObjectModelUrl: self.configuration.managedObjectModelUrl,
-                                               persistentContainerName: self.configuration.persistentContainerName,
-                                               persistentContainerUrl: self.configuration.persistentContainerUrl,
-                                               isCloudKitEnabled: isCloudKitEnabled)
+            let container: NSPersistentContainer = {
+                guard self.persistentContainer.isLoaded else { return self.persistentContainer }
+                return Self.makeContainer(managedObjectModelUrl: self.configuration.managedObjectModelUrl,
+                                          persistentContainerName: self.configuration.persistentContainerName,
+                                          persistentContainerUrl: self.configuration.persistentContainerUrl,
+                                          isCloudKitEnabled: isCloudKitEnabled)
+            }()
 
             // iCloud同期中のStoreが残っていると新たなiCloud同期Storeをロードしようとした際に失敗してしまうので、
             // このタイミングで明示的に削除する
@@ -121,4 +124,8 @@ public class PersistentStack {
 
         return container
     }
+}
+
+extension NSPersistentContainer {
+    var isLoaded: Bool { persistentStoreCoordinator.persistentStores.count > 0 }
 }

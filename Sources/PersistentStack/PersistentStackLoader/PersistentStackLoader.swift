@@ -10,6 +10,7 @@ import Foundation
 public class PersistentStackLoader {
     // MARK: - Properties
 
+    @Published public private(set) var isCKAccountAvailable: Bool?
     private let persistentStack: PersistentStack
     private let syncSettingStorage: CloudKitSyncSettingStorable
 
@@ -26,7 +27,13 @@ public class PersistentStackLoader {
 
     public func run() -> Task<Void, Never> {
         return Task {
-            for await (isEnabled, status) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled, CKAccountStatus.ps.stream) {
+            for await (isEnabled, status) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled.removeDuplicates(),
+                                                           CKAccountStatus.ps.stream.removeDuplicates())
+            {
+                defer {
+                    isCKAccountAvailable = status?.isAvailable
+                }
+
                 guard isEnabled else {
                     persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
                     continue
@@ -46,4 +53,8 @@ public class PersistentStackLoader {
             }
         }
     }
+}
+
+private extension CKAccountStatus {
+    var isAvailable: Bool { self == .available }
 }
