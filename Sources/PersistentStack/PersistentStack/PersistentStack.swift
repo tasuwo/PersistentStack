@@ -24,6 +24,7 @@ public class PersistentStack {
     public var reloaded: AnyPublisher<Void, Never> { _reloaded.eraseToAnyPublisher() }
 
     private let configuration: Configuration
+    private let managedObjectModel: NSManagedObjectModel
     private let historyTracker: PersistentHistoryTracker
 
     // MARK: - Initializers
@@ -34,7 +35,15 @@ public class PersistentStack {
                                                        persistentHistoryTokenSaveDirectory: configuration.persistentHistoryTokenSaveDirectory,
                                                        persistentHistoryTokenFileName: configuration.persistentHistoryTokenFileName)
         self.isCloudKitEnabled = isCloudKitEnabled
-        self.persistentContainer = Self.makeContainer(managedObjectModelUrl: configuration.managedObjectModelUrl,
+
+        // `Multiple NSEntityDescriptions claim the NSManagedObject subclass` を避けるため、
+        // Managed Object Model は1度のみロードする
+        guard let managedObjectModel = NSManagedObjectModel(contentsOf: configuration.managedObjectModelUrl) else {
+            fatalError("Unable to load Core Data Model")
+        }
+        self.managedObjectModel = managedObjectModel
+
+        self.persistentContainer = Self.makeContainer(managedObjectModel: managedObjectModel,
                                                       persistentContainerName: configuration.persistentContainerName,
                                                       persistentContainerUrl: configuration.persistentContainerUrl,
                                                       isCloudKitEnabled: isCloudKitEnabled)
@@ -64,7 +73,7 @@ public class PersistentStack {
 
             let container: NSPersistentContainer = {
                 guard self.persistentContainer.isLoaded else { return self.persistentContainer }
-                return Self.makeContainer(managedObjectModelUrl: self.configuration.managedObjectModelUrl,
+                return Self.makeContainer(managedObjectModel: self.managedObjectModel,
                                           persistentContainerName: self.configuration.persistentContainerName,
                                           persistentContainerUrl: self.configuration.persistentContainerUrl,
                                           isCloudKitEnabled: isCloudKitEnabled)
@@ -94,15 +103,12 @@ public class PersistentStack {
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
 
-    private static func makeContainer(managedObjectModelUrl: URL,
+    private static func makeContainer(managedObjectModel: NSManagedObjectModel,
                                       persistentContainerName: String,
                                       persistentContainerUrl: URL?,
                                       isCloudKitEnabled: Bool) -> NSPersistentContainer
     {
-        guard let model = NSManagedObjectModel(contentsOf: managedObjectModelUrl) else {
-            fatalError("Unable to load Core Data Model")
-        }
-        let container = NSPersistentCloudKitContainer(name: persistentContainerName, managedObjectModel: model)
+        let container = NSPersistentCloudKitContainer(name: persistentContainerName, managedObjectModel: managedObjectModel)
 
         guard let description = container.persistentStoreDescriptions.first else {
             fatalError("Failed to retrieve a persistent store description.")
