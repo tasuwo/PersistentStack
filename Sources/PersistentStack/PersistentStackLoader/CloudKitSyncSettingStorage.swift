@@ -24,6 +24,12 @@ public class CloudKitSyncSettingStorage {
         guard let userDefaults = UserDefaults(suiteName: "net.tasuwo.PersistentStack") else { return nil }
         self.init(userDefaults: userDefaults)
     }
+
+    // MARK: - Methods
+
+    public func set(isCloudKitSyncEnabled: Bool) {
+        userDefaults.set(isCloudKitSyncEnabled, forKey: Key.isCloudKitSyncEnabled.rawValue)
+    }
 }
 
 extension UserDefaults {
@@ -32,10 +38,10 @@ extension UserDefaults {
     }
 }
 
-extension CloudKitSyncSettingStorage: CloudKitSyncSettingStorable {
+extension CloudKitSyncSettingStorage: CloudKitSyncAvailabilityProviding {
     // MARK: - CloudKitSyncSettingStorable
 
-    public var isCloudKitSyncEnabled: AsyncStream<Bool> {
+    public var isCloudKitSyncAvailable: AsyncStream<Bool> {
         AsyncStream { continuation in
             let cancellable = userDefaults.publisher(for: \.isCloudKitSyncEnabled)
                 .sink { continuation.yield($0) }
@@ -46,9 +52,5 @@ extension CloudKitSyncSettingStorage: CloudKitSyncSettingStorable {
 
             continuation.yield(userDefaults.isCloudKitSyncEnabled)
         }
-    }
-
-    public func set(isCloudKitSyncEnabled: Bool) {
-        userDefaults.set(isCloudKitSyncEnabled, forKey: Key.isCloudKitSyncEnabled.rawValue)
     }
 }

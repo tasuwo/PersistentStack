@@ -12,22 +12,22 @@ public class PersistentStackLoader {
 
     @Published public private(set) var isCKAccountAvailable: Bool?
     private let persistentStack: PersistentStack
-    private let syncSettingStorage: CloudKitSyncSettingStorable
+    private let availabilityProvider: CloudKitSyncAvailabilityProviding
 
     // MARK: - Initializers
 
     public init(persistentStack: PersistentStack,
-                syncSettingStorage: CloudKitSyncSettingStorable)
+                availabilityProvider: CloudKitSyncAvailabilityProviding)
     {
         self.persistentStack = persistentStack
-        self.syncSettingStorage = syncSettingStorage
+        self.availabilityProvider = availabilityProvider
     }
 
     // MARK: - Methods
 
     public func run() -> Task<Void, Never> {
         return Task {
-            for await (isEnabled, status) in combineLatest(syncSettingStorage.isCloudKitSyncEnabled.removeDuplicates(),
+            for await (isEnabled, status) in combineLatest(availabilityProvider.isCloudKitSyncAvailable.removeDuplicates(),
                                                            CKAccountStatus.ps.stream.removeDuplicates())
             {
                 defer {
