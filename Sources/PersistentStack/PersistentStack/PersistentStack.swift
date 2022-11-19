@@ -72,8 +72,9 @@ public class PersistentStack {
             guard let self else { return }
 
             let newContainer: NSPersistentContainer
-            if !self.persistentContainer.isLoaded, self.isCloudKitEnabled == isCloudKitEnabled {
-                newContainer = self.persistentContainer
+            let oldContainer = self.persistentContainer
+            if !oldContainer.isLoaded, self.isCloudKitEnabled == isCloudKitEnabled {
+                newContainer = oldContainer
             } else {
                 newContainer = Self.makeContainer(managedObjectModel: self.managedObjectModel,
                                                   persistentContainerName: self.configuration.persistentContainerName,
@@ -81,17 +82,20 @@ public class PersistentStack {
                                                   isCloudKitEnabled: isCloudKitEnabled)
             }
 
-            // iCloud同期中のStoreが残っていると新たなiCloud同期Storeをロードしようとした際に失敗してしまうので、
-            // このタイミングで明示的に削除する
-            self.persistentContainer.persistentStoreCoordinator.persistentStores.forEach {
-                try? self.persistentContainer.persistentStoreCoordinator.remove($0)
-            }
-
             Self.loadContainer(newContainer, with: self.configuration)
 
             self.persistentContainer = newContainer
             self.isCloudKitEnabled = isCloudKitEnabled
             self._reloaded.send(())
+
+            if newContainer !== oldContainer {
+                // iCloud同期中のStoreが残っていると、次回新たにiCloud同期するStoreをロードしようとした際に、"CloudKit setup failed because there
+                // is another instance of this persistent store actively syncing with CloudKit in this process." という警告とともに
+                // ロードに失敗してしまうため、このタイミングで明示的に削除する
+                oldContainer.persistentStoreCoordinator.persistentStores.forEach {
+                    try? oldContainer.persistentStoreCoordinator.remove($0)
+                }
+            }
         }
     }
 
