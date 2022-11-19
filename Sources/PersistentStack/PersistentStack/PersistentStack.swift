@@ -71,13 +71,15 @@ public class PersistentStack {
         historyTracker.dispatchContainerReload { [weak self] in
             guard let self else { return }
 
-            let container: NSPersistentContainer = {
-                guard self.persistentContainer.isLoaded else { return self.persistentContainer }
-                return Self.makeContainer(managedObjectModel: self.managedObjectModel,
-                                          persistentContainerName: self.configuration.persistentContainerName,
-                                          persistentContainerUrl: self.configuration.persistentContainerUrl,
-                                          isCloudKitEnabled: isCloudKitEnabled)
-            }()
+            let newContainer: NSPersistentContainer
+            if !self.persistentContainer.isLoaded, self.isCloudKitEnabled == isCloudKitEnabled {
+                newContainer = self.persistentContainer
+            } else {
+                newContainer = Self.makeContainer(managedObjectModel: self.managedObjectModel,
+                                                  persistentContainerName: self.configuration.persistentContainerName,
+                                                  persistentContainerUrl: self.configuration.persistentContainerUrl,
+                                                  isCloudKitEnabled: isCloudKitEnabled)
+            }
 
             // iCloud同期中のStoreが残っていると新たなiCloud同期Storeをロードしようとした際に失敗してしまうので、
             // このタイミングで明示的に削除する
@@ -85,9 +87,9 @@ public class PersistentStack {
                 try? self.persistentContainer.persistentStoreCoordinator.remove($0)
             }
 
-            Self.loadContainer(container, with: self.configuration)
+            Self.loadContainer(newContainer, with: self.configuration)
 
-            self.persistentContainer = container
+            self.persistentContainer = newContainer
             self.isCloudKitEnabled = isCloudKitEnabled
             self._reloaded.send(())
         }
