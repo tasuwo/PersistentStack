@@ -34,6 +34,7 @@ class PersistentHistoryTracker {
 
     private lazy var historyQueue: OperationQueue = {
         let queue = OperationQueue()
+        queue.underlyingQueue = self.underlyingQueue
         queue.maxConcurrentOperationCount = 1
         return queue
     }()
@@ -42,6 +43,7 @@ class PersistentHistoryTracker {
     private let notificationCenter: NotificationCenter
     private let persistentHistoryTokenSaveDirectory: URL
     private let persistentHistoryTokenFileName: String
+    private let underlyingQueue = DispatchQueue(label: "net.tasuwo.PersistentStack", qos: .userInitiated)
 
     private var onMergeRemoteChanges: PersistentStack.RemoteChangeMergeHandler?
     private var persistentContainerObservationCancellable: AnyCancellable?
