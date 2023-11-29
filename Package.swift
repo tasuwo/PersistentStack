@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.9
 
 import PackageDescription
 
@@ -12,8 +12,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/tasuwo/swift", from: "0.3.0"),
-        .package(url: "https://github.com/apple/swift-async-algorithms", .upToNextMinor(from: "0.0.3"))
+        .package(url: "https://github.com/tasuwo/swift", .upToNextMinor(from: "0.6.1")),
+        .package(url: "https://github.com/apple/swift-async-algorithms", .upToNextMinor(from: "1.0.0-beta.1"))
     ],
     targets: [
         .target(

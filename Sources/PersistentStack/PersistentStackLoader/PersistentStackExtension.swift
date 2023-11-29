@@ -22,13 +22,11 @@ public protocol PersistentStackExtended {
 public extension PersistentStackExtended {
     static var ps: PersistentStackExtension<Self>.Type {
         get { PersistentStackExtension<Self>.self }
-        // swiftlint:disable:next unused_setter_value
         set {}
     }
 
     var ps: PersistentStackExtension<Self> {
         get { PersistentStackExtension(self) }
-        // swiftlint:disable:next unused_setter_value
         set {}
     }
 }

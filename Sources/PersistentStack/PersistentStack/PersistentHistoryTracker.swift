@@ -23,7 +23,6 @@ class PersistentHistoryTracker {
 
     private lazy var tokenFile: URL = {
         if !FileManager.default.fileExists(atPath: persistentHistoryTokenSaveDirectory.path) {
-            // swiftlint:disable:next force_try
             try! FileManager.default.createDirectory(at: persistentHistoryTokenSaveDirectory,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
