@@ -15,6 +15,7 @@ public extension PersistentStack {
             .defaultDirectoryURL()
             .appendingPathComponent("PersistentHistoryTokens", isDirectory: true)
         public var persistentHistoryTokenFileName: String
+        public var shouldLoadPersistentContainerAtInitialized = false
 
         public init(author: String,
                     persistentContainerName: String,

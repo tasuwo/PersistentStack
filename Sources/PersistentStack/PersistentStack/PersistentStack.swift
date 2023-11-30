@@ -47,6 +47,9 @@ public class PersistentStack {
                                                       persistentContainerName: configuration.persistentContainerName,
                                                       persistentContainerUrl: configuration.persistentContainerUrl,
                                                       isCloudKitEnabled: isCloudKitEnabled)
+        if configuration.shouldLoadPersistentContainerAtInitialized {
+            Self.loadContainer(persistentContainer, with: configuration)
+        }
 
         historyTracker.observe(self)
     }
