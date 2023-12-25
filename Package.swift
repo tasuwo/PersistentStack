@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "PersistentStack",
-    platforms: [.iOS(.v14), .macOS(.v10_15)],
+    platforms: [.iOS(.v14), .macOS(.v14)],
     products: [
         .library(
             name: "PersistentStack",
