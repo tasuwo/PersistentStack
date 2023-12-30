@@ -10,8 +10,9 @@ import Foundation
 public class PersistentStackLoader {
     // MARK: - Properties
 
-    public let isCloudKitSyncAvailables: AsyncStream<Bool?>
-    private let isCloudKitSyncAvailablesContinuation: AsyncStream<Bool?>.Continuation
+    public var isCloudKitSyncAvailable: Bool? { _isCloudKitSyncAvailable.value }
+
+    private let _isCloudKitSyncAvailable = CurrentValueSubject<Bool?, Never>(nil)
     private let persistentStack: PersistentStack
     private let settingStorage: CloudKitSyncSettingStorage
 
@@ -22,13 +23,6 @@ public class PersistentStackLoader {
     {
         self.persistentStack = persistentStack
         self.settingStorage = settingStorage
-        let (stream, continuation) = AsyncStream<Bool?>.makeStream()
-        self.isCloudKitSyncAvailables = stream
-        self.isCloudKitSyncAvailablesContinuation = continuation
-    }
-
-    deinit {
-        isCloudKitSyncAvailablesContinuation.finish()
     }
 
     // MARK: - Methods
@@ -39,7 +33,7 @@ public class PersistentStackLoader {
                                                            CKAccountStatus.stream.removeDuplicates())
             {
                 defer {
-                    isCloudKitSyncAvailablesContinuation.yield(status?.isAvailable)
+                    _isCloudKitSyncAvailable.send(status?.isAvailable)
                 }
 
                 guard isEnabled else {
@@ -59,8 +53,17 @@ public class PersistentStackLoader {
                     persistentStack.reconfigureIfNeeded(isCloudKitSyncEnabled: false)
                 }
             }
+        }
+    }
 
-            isCloudKitSyncAvailablesContinuation.yield(nil)
+    public func isCloudKitSyncAvailables() -> AsyncStream<Bool?> {
+        AsyncStream { continuation in
+            let cancellable = _isCloudKitSyncAvailable
+                .sink { continuation.yield($0) }
+
+            continuation.onTermination = { _ in
+                cancellable.cancel()
+            }
         }
     }
 }
