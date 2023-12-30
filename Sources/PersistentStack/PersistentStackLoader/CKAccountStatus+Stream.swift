@@ -4,9 +4,7 @@
 
 import CloudKit
 
-extension CKAccountStatus: PersistentStackExtended {}
-
-public extension PersistentStackExtension where Base == CKAccountStatus {
+extension CKAccountStatus {
     static var stream: AsyncStream<CKAccountStatus?> {
         AsyncStream { continuation in
             if #available(iOS 15, *) {

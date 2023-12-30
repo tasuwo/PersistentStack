@@ -12,43 +12,43 @@ public class PersistentStackLoader {
 
     @Published public private(set) var isCKAccountAvailable: Bool?
     private let persistentStack: PersistentStack
-    private let availabilityProvider: CloudKitSyncAvailabilityProviding
+    private let settingStorage: CloudKitSyncSettingStorage
 
     // MARK: - Initializers
 
     public init(persistentStack: PersistentStack,
-                availabilityProvider: CloudKitSyncAvailabilityProviding)
+                settingStorage: CloudKitSyncSettingStorage)
     {
         self.persistentStack = persistentStack
-        self.availabilityProvider = availabilityProvider
+        self.settingStorage = settingStorage
     }
 
     // MARK: - Methods
 
     public func run() -> Task<Void, Never> {
         return Task {
-            for await (isEnabled, status) in combineLatest(availabilityProvider.isCloudKitSyncAvailable.removeDuplicates(),
-                                                           CKAccountStatus.ps.stream.removeDuplicates())
+            for await (isEnabled, status) in combineLatest(settingStorage.isCloudKitSyncEnabled.removeDuplicates(),
+                                                           CKAccountStatus.stream.removeDuplicates())
             {
                 defer {
                     isCKAccountAvailable = status?.isAvailable
                 }
 
                 guard isEnabled else {
-                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
+                    persistentStack.reconfigureIfNeeded(isCloudKitSyncEnabled: false)
                     continue
                 }
 
                 switch status {
                 case .available:
-                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: true)
+                    persistentStack.reconfigureIfNeeded(isCloudKitSyncEnabled: true)
 
                 case .none:
                     // NOP
                     break
 
                 default:
-                    persistentStack.reconfigureIfNeeded(isCloudKitEnabled: false)
+                    persistentStack.reconfigureIfNeeded(isCloudKitSyncEnabled: false)
                 }
             }
         }

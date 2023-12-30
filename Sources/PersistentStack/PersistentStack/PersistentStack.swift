@@ -16,7 +16,7 @@ public class PersistentStack {
 
     public var isLoaded: Bool { persistentContainer.isLoaded }
     @Published
-    public private(set) var isCloudKitEnabled: Bool
+    public private(set) var isCloudKitSyncEnabled: Bool
     @Published
     private(set) var persistentContainer: NSPersistentContainer
 
@@ -29,12 +29,12 @@ public class PersistentStack {
 
     // MARK: - Initializers
 
-    public init(configuration: Configuration, isCloudKitEnabled: Bool) {
+    public init(configuration: Configuration, isCloudKitSyncEnabled: Bool) {
         self.configuration = configuration
         self.historyTracker = PersistentHistoryTracker(author: configuration.author,
                                                        persistentHistoryTokenSaveDirectory: configuration.persistentHistoryTokenSaveDirectory,
                                                        persistentHistoryTokenFileName: configuration.persistentHistoryTokenFileName)
-        self.isCloudKitEnabled = isCloudKitEnabled
+        self.isCloudKitSyncEnabled = isCloudKitSyncEnabled
 
         // `Multiple NSEntityDescriptions claim the NSManagedObject subclass` を避けるため、
         // Managed Object Model は1度のみロードする
@@ -46,7 +46,7 @@ public class PersistentStack {
         self.persistentContainer = Self.makeContainer(managedObjectModel: managedObjectModel,
                                                       persistentContainerName: configuration.persistentContainerName,
                                                       persistentContainerUrl: configuration.persistentContainerUrl,
-                                                      isCloudKitEnabled: isCloudKitEnabled)
+                                                      isCloudKitSyncEnabled: isCloudKitSyncEnabled)
         if configuration.shouldLoadPersistentContainerAtInitialized {
             Self.loadContainer(persistentContainer, with: configuration)
         }
@@ -69,26 +69,26 @@ public class PersistentStack {
         historyTracker.registerRemoteChangeMergeHandler(handler)
     }
 
-    public func reconfigureIfNeeded(isCloudKitEnabled: Bool) {
-        guard self.isCloudKitEnabled != isCloudKitEnabled || !self.persistentContainer.isLoaded else { return }
+    public func reconfigureIfNeeded(isCloudKitSyncEnabled: Bool) {
+        guard self.isCloudKitSyncEnabled != isCloudKitSyncEnabled || !self.persistentContainer.isLoaded else { return }
         historyTracker.dispatchContainerReload { [weak self] in
             guard let self else { return }
 
             let newContainer: NSPersistentContainer
             let oldContainer = self.persistentContainer
-            if !oldContainer.isLoaded, self.isCloudKitEnabled == isCloudKitEnabled {
+            if !oldContainer.isLoaded, self.isCloudKitSyncEnabled == isCloudKitSyncEnabled {
                 newContainer = oldContainer
             } else {
                 newContainer = Self.makeContainer(managedObjectModel: self.managedObjectModel,
                                                   persistentContainerName: self.configuration.persistentContainerName,
                                                   persistentContainerUrl: self.configuration.persistentContainerUrl,
-                                                  isCloudKitEnabled: isCloudKitEnabled)
+                                                  isCloudKitSyncEnabled: isCloudKitSyncEnabled)
             }
 
             Self.loadContainer(newContainer, with: self.configuration)
 
             self.persistentContainer = newContainer
-            self.isCloudKitEnabled = isCloudKitEnabled
+            self.isCloudKitSyncEnabled = isCloudKitSyncEnabled
             self._reloaded.send(())
 
             if newContainer !== oldContainer {
@@ -115,7 +115,7 @@ public class PersistentStack {
     private static func makeContainer(managedObjectModel: NSManagedObjectModel,
                                       persistentContainerName: String,
                                       persistentContainerUrl: URL?,
-                                      isCloudKitEnabled: Bool) -> NSPersistentContainer
+                                      isCloudKitSyncEnabled: Bool) -> NSPersistentContainer
     {
         let container = NSPersistentCloudKitContainer(name: persistentContainerName, managedObjectModel: managedObjectModel)
 
@@ -133,7 +133,7 @@ public class PersistentStack {
         description.shouldMigrateStoreAutomatically = true
         description.shouldInferMappingModelAutomatically = true
 
-        if !isCloudKitEnabled {
+        if !isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = nil
         }
 
