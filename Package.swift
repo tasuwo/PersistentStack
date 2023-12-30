@@ -12,17 +12,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/tasuwo/swift", .upToNextMajor(from: "0.7.0")),
-        .package(url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "1.0.0-beta.1"))
+        .package(url: "https://github.com/apple/swift-async-algorithms", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         .target(
             name: "PersistentStack",
             dependencies: [
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms")
-            ],
-            plugins: [
-                .plugin(name: "LintSwift", package: "swift")
             ]
         ),
     ]
