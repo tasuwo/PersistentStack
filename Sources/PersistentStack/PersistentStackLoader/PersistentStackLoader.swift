@@ -10,7 +10,8 @@ import Foundation
 public class PersistentStackLoader {
     // MARK: - Properties
 
-    @Published public private(set) var isCKAccountAvailable: Bool?
+    public let isCloudKitSyncAvailables: AsyncStream<Bool?>
+    private let isCloudKitSyncAvailablesContinuation: AsyncStream<Bool?>.Continuation
     private let persistentStack: PersistentStack
     private let settingStorage: CloudKitSyncSettingStorage
 
@@ -21,6 +22,13 @@ public class PersistentStackLoader {
     {
         self.persistentStack = persistentStack
         self.settingStorage = settingStorage
+        let (stream, continuation) = AsyncStream<Bool?>.makeStream()
+        self.isCloudKitSyncAvailables = stream
+        self.isCloudKitSyncAvailablesContinuation = continuation
+    }
+
+    deinit {
+        isCloudKitSyncAvailablesContinuation.finish()
     }
 
     // MARK: - Methods
@@ -31,7 +39,7 @@ public class PersistentStackLoader {
                                                            CKAccountStatus.stream.removeDuplicates())
             {
                 defer {
-                    isCKAccountAvailable = status?.isAvailable
+                    isCloudKitSyncAvailablesContinuation.yield(status?.isAvailable)
                 }
 
                 guard isEnabled else {
@@ -51,6 +59,8 @@ public class PersistentStackLoader {
                     persistentStack.reconfigureIfNeeded(isCloudKitSyncEnabled: false)
                 }
             }
+
+            isCloudKitSyncAvailablesContinuation.yield(nil)
         }
     }
 }
