@@ -123,11 +123,9 @@ public class PersistentStack {
             fatalError("Failed to retrieve a persistent store description.")
         }
 
-        #if os(iOS)
         if let persistentContainerUrl {
             description.url = persistentContainerUrl
         }
-        #endif
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
         description.shouldMigrateStoreAutomatically = true
