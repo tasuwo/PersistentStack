@@ -16,6 +16,7 @@ public extension PersistentStack {
             .appendingPathComponent("PersistentHistoryTokens", isDirectory: true)
         public var persistentHistoryTokenFileName: String
         public var shouldLoadPersistentContainerAtInitialized = false
+        public var initializeCloudKitContainer = false
 
         public init(author: String,
                     persistentContainerName: String,

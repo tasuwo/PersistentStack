@@ -4,6 +4,7 @@
 
 import Combine
 import CoreData
+import os.log
 
 public class PersistentStack {
     public typealias RemoteChangeMergeHandler = (NSPersistentContainer, [NSPersistentHistoryTransaction]) -> Void
@@ -46,7 +47,8 @@ public class PersistentStack {
         self.persistentContainer = Self.makeContainer(managedObjectModel: managedObjectModel,
                                                       persistentContainerName: configuration.persistentContainerName,
                                                       persistentContainerUrl: configuration.persistentContainerUrl,
-                                                      isCloudKitSyncEnabled: isCloudKitSyncEnabled)
+                                                      isCloudKitSyncEnabled: isCloudKitSyncEnabled,
+                                                      initializeCloudKitContainer: configuration.initializeCloudKitContainer)
         if configuration.shouldLoadPersistentContainerAtInitialized {
             Self.loadContainer(persistentContainer, with: configuration)
         }
@@ -82,7 +84,8 @@ public class PersistentStack {
                 newContainer = Self.makeContainer(managedObjectModel: self.managedObjectModel,
                                                   persistentContainerName: self.configuration.persistentContainerName,
                                                   persistentContainerUrl: self.configuration.persistentContainerUrl,
-                                                  isCloudKitSyncEnabled: isCloudKitSyncEnabled)
+                                                  isCloudKitSyncEnabled: isCloudKitSyncEnabled,
+                                                  initializeCloudKitContainer: self.configuration.initializeCloudKitContainer)
             }
 
             Self.loadContainer(newContainer, with: self.configuration)
@@ -115,7 +118,8 @@ public class PersistentStack {
     private static func makeContainer(managedObjectModel: NSManagedObjectModel,
                                       persistentContainerName: String,
                                       persistentContainerUrl: URL?,
-                                      isCloudKitSyncEnabled: Bool) -> NSPersistentContainer
+                                      isCloudKitSyncEnabled: Bool,
+                                      initializeCloudKitContainer: Bool) -> NSPersistentContainer
     {
         let container = NSPersistentCloudKitContainer(name: persistentContainerName, managedObjectModel: managedObjectModel)
 
@@ -134,6 +138,16 @@ public class PersistentStack {
         if !isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = nil
         }
+
+        #if DEBUG
+        if initializeCloudKitContainer {
+            do {
+                try container.initializeCloudKitSchema()
+            } catch {
+                Logger.make().debug("Failed to initialize CloutKit Schema \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        #endif
 
         return container
     }

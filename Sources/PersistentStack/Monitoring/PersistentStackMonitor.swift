@@ -6,9 +6,7 @@ import Combine
 import CoreData
 import os.log
 
-private let log = OSLog(subsystem: "net.tasuwo.PersistentStack", category: "CoreData & CloudKit Event Tracking")
-
-public class PersistentStackMonitor {
+public final class PersistentStackMonitor {
     private let notificationCenter: NotificationCenter
     private var cancellable: AnyCancellable?
 
@@ -28,7 +26,7 @@ public class PersistentStackMonitor {
                     return
                 }
 
-                let logger = Logger(log)
+                let logger = Logger.make()
                 switch event.type {
                 case .setup:
                     logger.log(level: .debug, "[PersistentStack] Setup \(event.isStarted ? "started" : "ended", privacy: .public)")
