@@ -109,6 +109,17 @@ public class PersistentStack {
         container.loadPersistentStores { storeDescription, error in
             guard let error = error as NSError? else { return }
             assertionFailure("Persistent store '\(storeDescription)' failed loading: \(String(describing: error))")
+
+            #if DEBUG
+            if container.persistentStoreDescriptions.first?.cloudKitContainerOptions != nil,
+               configuration.initializeCloudKitContainer {
+                do {
+                    try (container as? NSPersistentCloudKitContainer)?.initializeCloudKitSchema()
+                } catch {
+                    Logger.make().debug("Failed to initialize CloutKit Schema: \(String(describing: error), privacy: .public)")
+                }
+            }
+            #endif
         }
         container.viewContext.mergePolicy = configuration.mergePolicy
         container.viewContext.transactionAuthor = configuration.author
@@ -138,16 +149,6 @@ public class PersistentStack {
         if !isCloudKitSyncEnabled {
             description.cloudKitContainerOptions = nil
         }
-
-        #if DEBUG
-        if initializeCloudKitContainer {
-            do {
-                try container.initializeCloudKitSchema()
-            } catch {
-                Logger.make().debug("Failed to initialize CloutKit Schema \(error.localizedDescription, privacy: .public)")
-            }
-        }
-        #endif
 
         return container
     }
