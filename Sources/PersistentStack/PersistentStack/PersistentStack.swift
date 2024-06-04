@@ -59,7 +59,7 @@ public class PersistentStack {
     public func newBackgroundContext(on queue: DispatchQueue) -> NSManagedObjectContext {
         return queue.sync {
             let context = persistentContainer.newBackgroundContext()
-            context.mergePolicy = configuration.mergePoicy
+            context.mergePolicy = configuration.mergePolicy
             context.transactionAuthor = configuration.author
             return context
         }
@@ -107,7 +107,7 @@ public class PersistentStack {
             guard let error = error as NSError? else { return }
             assertionFailure("Persistent store '\(storeDescription)' failed loading: \(String(describing: error))")
         }
-        container.viewContext.mergePolicy = configuration.mergePoicy
+        container.viewContext.mergePolicy = configuration.mergePolicy
         container.viewContext.transactionAuthor = configuration.author
         container.viewContext.automaticallyMergesChangesFromParent = true
     }

@@ -10,7 +10,7 @@ public extension PersistentStack {
         public var persistentContainerName: String = "PersistentStack"
         public var persistentContainerUrl: URL?
         public var managedObjectModelUrl: URL
-        public var mergePoicy: NSMergePolicy = .mergeByPropertyObjectTrump
+        public var mergePolicy: NSMergePolicy = .mergeByPropertyObjectTrump
         public var persistentHistoryTokenSaveDirectory = NSPersistentContainer
             .defaultDirectoryURL()
             .appendingPathComponent("PersistentHistoryTokens", isDirectory: true)
